@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+
+<project name="COOJA: Senseh" default="jar" basedir=".">
+  <property name="src" location="java"/>
+  <property name="build" location="build"/>
+  <property name="lib" location="lib"/>
+  <property name="cooja_jar" value="../../dist/cooja.jar"/>
+  <property name="cooja_mspsim_jar" value="../mspsim/lib/cooja_mspsim.jar"/>
+  <property name="mspsim_jar" value="../../../mspsim/mspsim.jar"/>
+
+
+  <condition property="cooja_jar_exists">
+    <available file="${cooja_jar}"/>
+  </condition>
+
+  <target name="check_cooja_jar" unless="cooja_jar_exists">
+    <echo message="Contiki's cooja.jar not found! Edit build.xml, and update the cooja_jar property"/>
+    <fail/>
+  </target>
+
+  <condition property="cooja_mspsim_jar_exists">
+    <available file="${cooja_mspsim_jar}"/>
+  </condition>
+
+  <target name="check_cooja_mspsim_jar" unless="cooja_mspsim_jar_exists">
+    <echo message="cooja_mspsim.jar not found! Edit build.xml, and update the cooja_mspsim_jar property"/>
+    <fail/>
+  </target>
+
+  <condition property="mspsim_jar_exists">
+    <available file="${mspsim_jar}"/>
+  </condition>
+
+  <target name="check_mspsim_jar" unless="mspsim_jar_exists">
+    <echo message="Contiki's mspsim.jar not found! Edit build.xml, and update the mspsim_jar property"/>
+    <fail/>
+  </target>
+
+
+  
+  <target name="init" depends="check_cooja_jar, check_cooja_mspsim_jar, check_mspsim_jar">
+    <tstamp/>
+  </target>
+
+  <target name="compile" depends="init">
+    <mkdir dir="${build}"/>
+    <javac srcdir="${src}" destdir="${build}" debug="on" includeantruntime="false">
+      <classpath>
+        <pathelement path="."/>
+        <pathelement location="${cooja_jar}"/>
+        <pathelement location="${cooja_mspsim_jar}"/>
+        <pathelement location="${mspsim_jar}"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <!--target name="clean" depends="init"-->
+  <target name="clean" depends="">
+    <delete dir="${build}"/>
+    <delete dir="${lib}"/>
+  </target>
+
+  <target name="jar" depends="init, compile, copy">
+    <mkdir dir="${lib}"/>
+    <jar destfile="${lib}/cooja_senseh.jar" basedir="${build}">
+      <manifest>
+        <attribute name="Class-Path" value="."/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="copy" depends="init">
+    <mkdir dir="${build}"/>
+  </target>
+
+</project>
