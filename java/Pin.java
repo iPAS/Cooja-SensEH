@@ -1,5 +1,5 @@
-import se.sics.cooja.ClassDescription;
-import se.sics.cooja.mspmote.SkyMote;
+import org.contikios.cooja.ClassDescription;
+import org.contikios.cooja.mspmote.SkyMote;
 import se.sics.mspsim.core.ADC12;
 import se.sics.mspsim.core.ADCInput;
 import se.sics.mspsim.core.IOUnit;

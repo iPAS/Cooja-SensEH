@@ -4,22 +4,22 @@ import java.util.Observable;
 import java.util.Observer;
 import org.apache.log4j.Logger;
 //import org.jdom.Element;
-import se.sics.cooja.ClassDescription;
-import se.sics.cooja.Mote;
-//import se.sics.cooja.SimEventCentral.MoteCountListener;
-import se.sics.cooja.Simulation;
-import se.sics.cooja.interfaces.Radio;
+import org.contikios.cooja.ClassDescription;
+import org.contikios.cooja.Mote;
+//import org.contikios.cooja.SimEventCentral.MoteCountListener;
+import org.contikios.cooja.Simulation;
+import org.contikios.cooja.interfaces.Radio;
 import se.sics.mspsim.core.OperatingModeListener;
 
 // TODO: Comment out the next two imports -- Only for debugging purposes
-import se.sics.cooja.emulatedmote.Radio802154;
-import se.sics.cooja.mspmote.interfaces.Msp802154Radio;
+import org.contikios.cooja.emulatedmote.Radio802154;
+import org.contikios.cooja.mspmote.interfaces.Msp802154Radio;
 import se.sics.mspsim.core.MSP430;
 import se.sics.mspsim.core.Chip;
-import se.sics.cooja.mspmote.SkyMote;
+import org.contikios.cooja.mspmote.SkyMote;
 import se.sics.mspsim.core.MSP430Constants;
 
-import se.sics.cooja.interfaces.Radio.RadioEvent;
+import org.contikios.cooja.interfaces.Radio.RadioEvent;
 
 
 /**

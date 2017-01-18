@@ -6,15 +6,15 @@ import javax.swing.JScrollPane;
 import org.apache.log4j.Logger;
 import org.jdom.Element;
 
-import se.sics.cooja.ClassDescription;
-import se.sics.cooja.GUI;
-import se.sics.cooja.PluginType;
-import se.sics.cooja.Simulation;
-import se.sics.cooja.TimeEvent;
-import se.sics.cooja.VisPlugin;
-import se.sics.cooja.dialogs.MessageList;
-import se.sics.cooja.interfaces.Radio;
-import se.sics.cooja.util.StringUtils;
+import org.contikios.cooja.ClassDescription;
+import org.contikios.cooja.Cooja;
+import org.contikios.cooja.PluginType;
+import org.contikios.cooja.Simulation;
+import org.contikios.cooja.TimeEvent;
+import org.contikios.cooja.VisPlugin;
+import org.contikios.cooja.dialogs.MessageListUI;
+import org.contikios.cooja.interfaces.Radio;
+import org.contikios.cooja.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +29,7 @@ import java.util.Collection;
  *
  * Adopted and adapted by
  * @author ipas
+ * @see 
  * @since 2015-05-01
  */
 @ClassDescription("SensEH GUI")
@@ -45,12 +46,11 @@ public class SensEHGUI extends VisPlugin {
     private long totalUpdates;
 
     private File ehConfigFile = null;
-
-    public MessageList log = new MessageList();  // [iPAS]: Changing to public for accessing by EHNode
+    private MessageListUI log = new MessageListUI();
     public static final boolean QUIET = false;  // [iPAS]: Changing to public for accessing by EHNode
 
 
-    public SensEHGUI(Simulation simulation, final GUI gui) {
+    public SensEHGUI(Simulation simulation, final Cooja gui) {
         super("SensEH Plugin", gui, false);
         this.simulation = simulation;
         //consumption = new Consumption(simulation);
@@ -75,15 +75,15 @@ public class SensEHGUI extends VisPlugin {
             return;
 
         JFileChooser fileChooser = new JFileChooser();
-        File suggest = new File(GUI.getExternalToolsSetting("DEFAULT_EH_CONFIG",
+        File suggest = new File(Cooja.getExternalToolsSetting("DEFAULT_EH_CONFIG",
                 "/home/user/contiki-2.7/tools/cooja/apps/senseh/config/EH.config"));
         fileChooser.setSelectedFile(suggest);
         fileChooser.setDialogTitle("Select configuration file for harvesting system");
-        int reply = fileChooser.showOpenDialog(GUI.getTopParentContainer());
+        int reply = fileChooser.showOpenDialog(Cooja.getTopParentContainer());
 
         if (reply == JFileChooser.APPROVE_OPTION) {
             ehConfigFile = fileChooser.getSelectedFile();
-            GUI.setExternalToolsSetting("DEFAULT_EH_CONFIG", ehConfigFile.getAbsolutePath());
+            Cooja.setExternalToolsSetting("DEFAULT_EH_CONFIG", ehConfigFile.getAbsolutePath());
         }
 
         if (ehConfigFile == null) {
@@ -179,7 +179,7 @@ public class SensEHGUI extends VisPlugin {
 
         if (ehConfigFile != null) {
             element = new Element("eh_config_file");
-            File file = simulation.getGUI().createPortablePath(ehConfigFile);
+            File file = simulation.getCooja().createPortablePath(ehConfigFile);
             element.setText(file.getPath().replaceAll("\\\\", "/"));
             element.setAttribute("EXPORT", "copy");
             configXML.add(element);
@@ -194,7 +194,7 @@ public class SensEHGUI extends VisPlugin {
             String name = element.getName();
 
             if (name.equals("eh_config_file")) {
-                ehConfigFile = simulation.getGUI().restorePortablePath(new File(element.getText()));
+                ehConfigFile = simulation.getCooja().restorePortablePath(new File(element.getText()));
                 init(ehConfigFile.getAbsolutePath());
             }
         }

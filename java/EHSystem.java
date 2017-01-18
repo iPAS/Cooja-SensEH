@@ -3,8 +3,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import se.sics.cooja.GUI;
-import se.sics.cooja.Simulation;
+//import se.sics.cooja.GUI;  // Changed to be org.contikios.cooja.Cooja on Contiki 3.x
+import org.contikios.cooja.Simulation;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -69,7 +69,7 @@ public class EHSystem { // EHSystem put all the pieces together
      * Relative path converter
      */
     private String relativeToAbsolutePath(String inPath) {    	    	    
-		File fi = this.simulation.getGUI().restorePortablePath(new File(inPath));
+		File fi = this.simulation.getCooja().restorePortablePath(new File(inPath));
 		return fi.getAbsolutePath(); 
     }
     

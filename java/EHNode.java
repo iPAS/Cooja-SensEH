@@ -1,12 +1,12 @@
 import org.apache.log4j.Logger;
 
-import se.sics.cooja.ClassDescription;
-import se.sics.cooja.Mote;
-import se.sics.cooja.MoteTimeEvent;
-import se.sics.cooja.Simulation;
-import se.sics.cooja.mspmote.MspMote;
-import se.sics.cooja.mspmote.SkyMote;
-import se.sics.cooja.radiomediums.UDGM;
+import org.contikios.cooja.ClassDescription;
+import org.contikios.cooja.Mote;
+import org.contikios.cooja.MoteTimeEvent;
+import org.contikios.cooja.Simulation;
+import org.contikios.cooja.mspmote.MspMote;
+import org.contikios.cooja.mspmote.SkyMote;
+import org.contikios.cooja.radiomediums.UDGM;
 import se.sics.mspsim.core.MSP430;
 
 
@@ -91,8 +91,7 @@ public class EHNode{
             
             if (nodeID == 0)
         	if (!SensEHGUI.QUIET && wasDepleted == false) {        		
-                String str = String.format("%d[%d]: bat is empty!", mote.getID(),simulation.getSimulationTimeMillis());
-                this.senseh.log.addMessage(str);
+                String str = String.format("%d[%d]: bat is empty!", mote.getID(),simulation.getSimulationTimeMillis());                
                 logger.info(str);                
             }        	
             
@@ -150,8 +149,7 @@ public class EHNode{
             
             if (nodeID == 0)
             if (!SensEHGUI.QUIET) {             
-                String str = String.format("%d[%d]: bat is refilled", mote.getID(),simulation.getSimulationTimeMillis());
-                this.senseh.log.addMessage(str);
+                String str = String.format("%d[%d]: bat is refilled", mote.getID(),simulation.getSimulationTimeMillis());                
                 logger.info(str);
             }     
             
