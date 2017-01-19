@@ -1,3 +1,7 @@
 SensEH: An Energy Harvesting Plugin for COOJA
 Contributors:
 Usman Raza, FBK, raza@fbk.eu
+
+SensEH for Contiki-3
+Pasakorn Tiwatthanont, BKK, ptiwatthanont@gmail.com
+
