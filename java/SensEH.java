@@ -28,14 +28,15 @@ import java.util.Collection;
  * 'SensEHGUI' is a main module which has been run before the simulation begin.
  *
  * Adopted and adapted by
- * @author ipas
- * @see 
+ * @author iPAS
+ * @see https://github.com/iPAS
  * @since 2015-05-01
  */
-@ClassDescription("SensEH GUI")
+@ClassDescription("SensEH")
 @PluginType(PluginType.SIM_PLUGIN)
-public class SensEHGUI extends VisPlugin {
-    private static Logger logger = Logger.getLogger(SensEHGUI.class);
+public class SensEH extends VisPlugin {
+    
+    private static Logger logger = Logger.getLogger(SensEH.class);
 
     private Simulation simulation;
     private EHNode [] ehNodes;
@@ -50,7 +51,7 @@ public class SensEHGUI extends VisPlugin {
     public static final boolean QUIET = false;  // [iPAS]: Changing to public for accessing by EHNode
 
 
-    public SensEHGUI(Simulation simulation, final Cooja gui) {
+    public SensEH(Simulation simulation, final Cooja gui) {
         super("SensEH Plugin", gui, false);
         this.simulation = simulation;
         //consumption = new Consumption(simulation);
