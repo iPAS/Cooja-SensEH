@@ -187,12 +187,14 @@ public class EHSystem { // EHSystem put all the pieces together
         // Calculating the charge actually going to the battery in milli Joule
         double energy = source.getOutputEnergy(envValue, chargeInterval) * harvEfficiency / 1000; // mJ
 
-        if (nodeID == 0) {
-            System.out.format("%d[%d]: harvestCharge()\n", nodeID, simulation.getSimulationTimeMillis());
-            System.out.format("\tHarvested (Lux): %.2f\n", envValue);
-            System.out.format("\tActual to Bat.(mJ): %.4f\n", energy);
-            System.out.format("\tHarvester eff.(%%): %.1f\n", (harvEfficiency * 100));
-        }
+        
+        // [iPAS]: -- for debuging -- 
+//        if (nodeID == 0) {
+//            System.out.format("%d[%d]: harvestCharge()\n", nodeID, simulation.getSimulationTimeMillis());
+//            System.out.format("\tHarvested (Lux): %.2f\n", envValue);
+//            System.out.format("\tActual to Bat.(mJ): %.4f\n", energy);
+//            System.out.format("\tHarvester eff.(%%): %.1f\n", (harvEfficiency * 100));
+//        }
         
         // Add the charge to the battery
         storage.charge(energy);
