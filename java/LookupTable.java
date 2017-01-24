@@ -58,7 +58,9 @@ public class LookupTable {
     public double getY(double x) {
         double y;
         Point [] piecePoints = getPieceWiseLinePoints(x);        
-        double slope = (piecePoints[1].getY() - piecePoints[0].getY()) / (piecePoints[1].getX() - piecePoints[0].getX());
+        double slope = 
+                (piecePoints[1].getY() - piecePoints[0].getY()) / 
+                (piecePoints[1].getX() - piecePoints[0].getX());
         y = slope * (x - piecePoints[0].getX()) + piecePoints[0].getY();  // Calculating the linear interpolation
         return y;
     }
@@ -70,30 +72,35 @@ public class LookupTable {
      * @return
      */
     private Point[] getPieceWiseLinePoints(double x) {
-        // TODO: check than the value of x fall within the range of x values of points
-        Point [] piecePoints = new Point[2];
-        boolean isInRange = false;
+        Point [] piecePoints = new Point[2]; 
+        
+        // Does the value of x fall within the range of x values of points ?
         int i = 0;
         for (; i < points.length; i++) {
-            if (x <= points[i].getX()) {
-                isInRange = true;
+            if (x <= points[i].getX())
                 break;
-            }
         }
         
-        if (isInRange) {
-            int prev = i - 1;
-            int next = i;
-            if (i == 0) {
-                prev = 0;
-                next = 1;
-            }
-            piecePoints[0] = points[prev];
-            piecePoints[1] = points[next];
-            return piecePoints;
-        } else {
-            return null;
-        }
+        double slope, y;
+        if (i == 0) {  // In case, x is less than all other points.            
+            slope = (points[1].getY() - points[0].getY()) / (points[1].getX() - points[0].getX());  
+            y     = points[0].getY() - slope * (points[0].getX() - x);
+            piecePoints[0] = new Point(x, y);  
+            piecePoints[1] = points[0];            
+        } else
+        
+        if (i == points.length) {  // In case, x is greater than the others.
+            slope = (points[i-1].getY() - points[i-2].getY()) / (points[i-1].getX() - points[i-2].getX());
+            y     = points[i-1].getY() + slope * (x - points[i-1].getX());
+            piecePoints[0] = points[i-1];  
+            piecePoints[1] = new Point(x, y);
+            
+        } else {  // In the ranges
+            piecePoints[0] = points[i-1];
+            piecePoints[1] = points[i];
+        }       
+        
+        return piecePoints;
     }
     
     /**
