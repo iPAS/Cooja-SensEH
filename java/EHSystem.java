@@ -3,6 +3,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 //import se.sics.cooja.GUI;  // Changed to be org.contikios.cooja.Cooja on Contiki 3.x
 import org.contikios.cooja.Simulation;
 
@@ -30,16 +32,27 @@ import java.io.StringReader;
  */
 public class EHSystem { // EHSystem put all the pieces together
 
-    private double totalHarvestedEnergy;
+    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static Logger logger = Logger.getLogger(EHSystem.class);
+    
+    private double totalHarvestedEnergy = 0;
 
-    private EnergySource source;
-    private Harvester harvester;
-    private EnergyStorage storage;
-    private EnvironmentalDataProvider enviornmentalDataProvider;
+    private EnergySource source     = null;
+    private Harvester harvester     = null;
+    private EnergyStorage storage   = null;
+    private EnvironmentalDataProvider envDataProvider = null;
     private double chargeInterval;
     
-    private int nodeID;
     private Simulation simulation;
+    private EHNode ehNode;
+    
+    
+    /**
+     * Public methods
+     */
+    public EHNode getEHNode() {
+        return ehNode;
+    }
 
     public double getChargeInterval() {
         return chargeInterval;
@@ -66,42 +79,34 @@ public class EHSystem { // EHSystem put all the pieces together
     }
     
     /**
-     * Relative path converter
-     */
-    private String relativeToAbsolutePath(String inPath) {    	    	    
-		File fi = this.simulation.getCooja().restorePortablePath(new File(inPath));
-		return fi.getAbsolutePath(); 
-    }
-    
-    /**
      * Constructor
      * @param nodeID
      * @param simulation
      * @param configFilePath
      */
-    public EHSystem(int nodeID, Simulation simulation, String configFilePath){                
-        this.nodeID = nodeID;        
-        this.simulation = simulation;
-        totalHarvestedEnergy = 0;
-        source 		= null;
-        harvester 	= null;
-        storage 	= null;
-        enviornmentalDataProvider = null;
+    public EHSystem(EHNode ehnode, Simulation simulation, String configFilePath){
 
-        // Load configuration
+        if (!logger.isEnabledFor(LOG_LEVEL)) 
+            logger.setLevel(LOG_LEVEL);
+        
+        this.simulation = simulation;
+        this.ehNode = ehnode;
+
+        /** 
+         * Load configuration
+         */
         Properties config = new Properties();
         try {
             FileInputStream fis = new FileInputStream(configFilePath);
 
             /** 
-             * [iPAS]: Replace "[APPS_DIR]", "[COOJA_DIR]", "CONTIKI_DIR" .. with real paths.             * 
+             * Replace "[APPS_DIR]", "[COOJA_DIR]", "CONTIKI_DIR" .. with real paths.             * 
              */            
             BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
             StringBuffer sbuff = new StringBuffer();
             
             Pattern pattern = Pattern.compile("\\[[a-zA-Z_]+\\]");            
-            String line;
-            
+            String line;            
             while ((line = reader.readLine()) != null) {                
                 Matcher matcher = pattern.matcher(line);  // Find
                 if (matcher.find() == true) {
@@ -111,23 +116,32 @@ public class EHSystem { // EHSystem put all the pieces together
             }
             
             reader.close();
-            fis.close();
-            
+            fis.close();            
             config.load(new StringReader(sbuff.toString()));
 
         } catch (FileNotFoundException e) {
-            System.err.println("Energy Harvesting System Configuration file " + configFilePath
-                             + " could not be read.. Exiting...");
+            logger.fatal("EHS Configuration file " + configFilePath + " could not be read! Exiting...");
+            e.printStackTrace();
             System.exit(-1);
 
         } catch (IOException e) {
-            System.err.println("Energy Harvesting System Configuration file " + configFilePath
-                             + " could not be loaded.. Exiting...");
+            logger.fatal("EHS Configuration file " + configFilePath + " could not be loaded! Exiting...");
+            e.printStackTrace();
             System.exit(-1);
         }
 
-        // Initializations
+        /**
+         * Initializations
+         */
         
+        // Initializing environment for energy source
+        envDataProvider = new LightDataProvider(
+                config.getProperty("source.environment.tracefile.path") + "/" + ehNode.getNodeLabel() + ".txt",
+                config.getProperty("source.environment.tracefile.format.delimiter"),
+                Integer.parseInt(config.getProperty("source.environment.tracefile.format.columnno")));
+        chargeInterval = Double.parseDouble(  // in seconds, defines how frequently charge should be updated
+                config.getProperty("source.environment.sampleinterval"));
+
         // Initializing energy source
         if (config.getProperty("source.type").equalsIgnoreCase("photovoltaic")) {            
             source = new PhotovoltaicCell(
@@ -137,14 +151,6 @@ public class EHSystem { // EHSystem put all the pieces together
             pvSource.setNumCells(Integer.parseInt(config.getProperty("source.num")));
         }
 
-        // Initializing environment for energy source
-        enviornmentalDataProvider = new LightDataProvider(
-                config.getProperty("source.environment.tracefile.path") + "/" + (nodeID+1) + ".txt",
-                config.getProperty("source.environment.tracefile.format.delimiter"),
-                Integer.parseInt(config.getProperty("source.environment.tracefile.format.columnno")));
-        chargeInterval = Double.parseDouble(  // in seconds, defines how frequently charge should be updated
-                config.getProperty("source.environment.sampleinterval"));
-
         // Initializing Harvester
         harvester = new Harvester(
                 config.getProperty("harvester.name"),
@@ -152,7 +158,7 @@ public class EHSystem { // EHSystem put all the pieces together
 
         //Initializing energy storage
         if (config.getProperty("storage.type").equalsIgnoreCase("battery")) {
-            Battery battery = new Battery(
+            Battery battery = new Battery(this,
                     config.getProperty("storage.name"), 
                     config.getProperty("storage.soc.lookuptable"),
                     Double.parseDouble(config.getProperty("battery.capacity")),
@@ -161,45 +167,49 @@ public class EHSystem { // EHSystem put all the pieces together
             battery.setNumBatteries(Integer.parseInt(config.getProperty("storage.num")));
             storage = battery;
         }
-        //else if (config.getProperty("storage.type").equalsIgnoreCase("capacitor")){} //TODO
-
+        //else if (config.getProperty("storage.type").equalsIgnoreCase("capacitor")){} //TODO        
     }
-
-    public void harvestCharge(){ // TODO: Check the units of different quantities
-        // Read the next value from environmental trace file
-        double envValue = enviornmentalDataProvider.getNext(); // average luxs
-
+    
+    /**
+     * Relative path converter
+     */
+    private String relativeToAbsolutePath(String inPath) {                  
+        File fi = this.simulation.getCooja().restorePortablePath(new File(inPath));
+        return fi.getAbsolutePath(); 
+    }
+    
+    /**
+     * 
+     */
+    public void harvestCharge(){  
+        /**
+         * TODO: Check the units of different quantities 
+         */
+        
+        // Read the next value from environmental trace file. 
+        double envData = envDataProvider.getNext();  // Average luxs.  
+        
         // Calculate the output power for the source for given environmental conditions
-        // TODO: handle the out of range values of outputpower.
-        // If envValue is too large, we should get maximum output power that can be taken from source. 
-        // It should not be arbitrary large
-        double sourceOutputPower = source.getOutputPower(envValue) / 1000;  // microWatts / 1000 = milliWatts
-        //System.out.println ("Power  = "+ sourceOutputPower + " mW");
-
-        // Get current cumulative voltage for all batteries
-        double volts = storage.getVoltage() * storage.getNumStorages();
-        //System.out.println ("Current Voltage  = "+ volts + " V");
-
-        // Get the efficiency of the harvester at given volts and output power
-        double harvEfficiency = harvester.getEfficiency(sourceOutputPower, volts);
-        //System.out.println ("harvester efficiency  = "+ (harvEfficiency *100)+ "%");
-
-        // Calculating the charge actually going to the battery in milli Joule
-        double energy = source.getOutputEnergy(envValue, chargeInterval) * harvEfficiency / 1000; // mJ
-
+        /**
+         * TODO: Do handle the out of range values of outputpower.
+         * If envValue is too large, we should get maximum output power that can be taken from the source.
+         * It should not be arbitrary large.
+         */
+        double sourceOutputPower =  // Source power in microWatts / 1000 = milliWatts
+                source.getOutputPower(envData) / 1000;  
+        double volts =              // Current cumulative voltage for all batteries
+                storage.getVoltage() * storage.getNumStorages();  
+        double harvEfficiency =     // Efficiency of the harvester at given volts and output power
+                harvester.getEfficiency(sourceOutputPower, volts);              
         
-        // [iPAS]: -- for debuging -- 
-//        if (nodeID == 0) {
-//            System.out.format("%d[%d]: harvestCharge()\n", nodeID, simulation.getSimulationTimeMillis());
-//            System.out.format("\tHarvested (Lux): %.2f\n", envValue);
-//            System.out.format("\tActual to Bat.(mJ): %.4f\n", energy);
-//            System.out.format("\tHarvester eff.(%%): %.1f\n", (harvEfficiency * 100));
-//        }
+        double energy =             // The actual charge going into the battery in milli Joule 
+                source.getOutputEnergy(envData, chargeInterval) * harvEfficiency / 1000; 
+
+        storage.charge(energy);         // Add the charge to the battery
+        totalHarvestedEnergy += energy; // Accumulate count
         
-        // Add the charge to the battery
-        storage.charge(energy);
-        totalHarvestedEnergy += energy;
-        //System.out.println (storage.getVoltage());
+        logger.debug(String.format("node %d harvests %.2f luxs, to bat. %.4f mJ (%.2f V), eff. %.1f %%.", 
+                ehNode.getNodeLabel(), envData, energy, storage.getVoltage(), harvEfficiency*100));
     }
 
     /** To be called by EHNode.dischargeConsumption() periodically 
@@ -209,4 +219,5 @@ public class EHSystem { // EHSystem put all the pieces together
     public void consumeCharge(double energyConsumed) {
         storage.discharge(energyConsumed);
     }
+    
 }

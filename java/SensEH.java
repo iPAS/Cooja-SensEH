@@ -3,6 +3,7 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JScrollPane;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.jdom.Element;
 
@@ -36,6 +37,7 @@ import java.util.Collection;
 @PluginType(PluginType.SIM_PLUGIN)
 public class SensEH extends VisPlugin {
     
+    private static final Level LOG_LEVEL = Level.DEBUG;
     private static Logger logger = Logger.getLogger(SensEH.class);
 
     private Simulation simulation;
@@ -46,26 +48,38 @@ public class SensEH extends VisPlugin {
     private ChargeUpdateEvent chargeUpdateEvent;
     private long totalUpdates;
 
+    private MessageListUI messageShowUI = new MessageListUI();
     private File ehConfigFile = null;
-    private MessageListUI log = new MessageListUI();
-    public static final boolean QUIET = false;  // [iPAS]: Changing to public for accessing by EHNode
-
-
+    
+    
+    /**
+     * Public methods
+     */
+    public void showMessage(String msg) {
+        messageShowUI.addMessage(msg);
+    }
+        
+    /**
+     * Constructor 
+     * 
+     * @param simulation
+     * @param gui
+     */
     public SensEH(Simulation simulation, final Cooja gui) {
         super("SensEH Plugin", gui, false);
+        
+        if (!logger.isEnabledFor(LOG_LEVEL)) 
+            logger.setLevel(LOG_LEVEL);
+        
         this.simulation = simulation;
-        //consumption = new Consumption(simulation);
+        
+        messageShowUI.addPopupMenuItem(null, true);  // Create message list popup
+        add(new JScrollPane(messageShowUI));
 
-        log.addPopupMenuItem(null, true);  // Create message list popup
-        add(new JScrollPane(log));
-
-        if (!QUIET) {
-            log.addMessage(
-                    "Harvesting plugin started at (ms): " + simulation.getSimulationTimeMillis());
-            logger.info(
-                    "Harvesting plugin started at (ms): " + simulation.getSimulationTimeMillis());
-        }
         setSize(500, 200);
+        
+        logger.info("SensEH plugin created!");
+        showMessage("SensEH plugin created!");
     }
 
     @Override
@@ -97,16 +111,16 @@ public class SensEH extends VisPlugin {
     void init(String configFilePath) {
         //setTitle("~~~ TITLE ~~~");
         ehNodes = new EHNode[simulation.getMotesCount()];
-        for (int i = 0; i < simulation.getMotesCount(); i++)
-            ehNodes[i] = new EHNode(i, simulation, configFilePath, this);
-        schedulePeriodicChargeUpdate(); // schedule event to update the charge of all the nodes
+        for (int id = 0; id < simulation.getMotesCount(); id++)
+            ehNodes[id] = new EHNode(this, id, simulation, configFilePath);
+        schedulePeriodicChargeUpdate();  // schedule event to update the charge of all the nodes
     }
 
     private void schedulePeriodicChargeUpdate() {
         simulation.invokeSimulationThread(new ChargeUpdateTaskScheduler());
     }
 
-    private double getChargeInterval() { // assume that charge update interval for ALL nodes is equal
+    private double getChargeInterval() {  // assume that charge update interval for ALL nodes is equal
         return ehNodes[0].getEHSystem().getChargeInterval();
     }
 
@@ -126,10 +140,11 @@ public class SensEH extends VisPlugin {
 
         @Override
         public void run() {
+            logger.debug("ChargeUpdateTaskScheduler.run() @" + simulation.getSimulationTime());
+            
             totalUpdates = 1;
             startTime = simulation.getSimulationTime();
             lastUpdateTime = 0; // It means never updated before.
-            //logger.debug("periodStart: " + periodStart);
             chargeUpdateEvent = new ChargeUpdateEvent(0);
             chargeUpdateEvent.execute(startTime + (long)(getChargeInterval() * 1000000));
         }
@@ -145,18 +160,16 @@ public class SensEH extends VisPlugin {
 
         @Override
         public void execute(long t) {
-            // Detect early events: reschedule for later
-            //System.out.println ("t\t"+t + "\tSimTime\t"+simulation.getSimulationTime());
-            if (simulation.getSimulationTime() < t) {
+            logger.debug("ChargeUpdateEvent.execute() @" + simulation.getSimulationTime());
+            
+            if (simulation.getSimulationTime() < t) {  // Detect early events: reschedule for later
                 simulation.scheduleEvent(this, startTime + (long)(totalUpdates * getChargeInterval() * 1000000));
                 return;
             }
-
             lastUpdateTime = simulation.getSimulationTime();
-            /**
-             * SensEH does NOT continuously count harvested energies and consumed energies.
-             * It updates the charges periodically on every interval.
-             */
+            
+            // SensEH does NOT continuously count harvested energies and consumed energies.
+            // It updates the charges periodically on every interval.
             for (EHNode node : ehNodes) {
                 node.updateCharge();  // charge with harvested energy, and, discharge with consumed energy
             }
@@ -274,12 +287,12 @@ public class SensEH extends VisPlugin {
             sb.append(prefix);
             sb.append("update:us=" + lastUpdateTime + ", ");
 
-            int nodeLabel  = node.getNodeID();
+            int nodeLabel = node.getNodeID()+1;
             EnergyStorage storage = node.getEHSystem().getStorage();
             EHSystem ehsys = node.getEHSystem();
             PowerConsumption consumption = node.getPowerConsumption();
 
-            sb.append("node="   + (nodeLabel+1) + ", ");
+            sb.append("node="   + nodeLabel + ", ");
             sb.append("sto:mJ=" + storage.getEnergy() + ", ");
             sb.append("eh:mJ="  + ehsys.getTotalHarvestedEnergy() + ", ");
             sb.append(consumption.getSnappedStatistics());
