@@ -84,13 +84,13 @@ public class EHSystem { // EHSystem put all the pieces together
      * @param simulation
      * @param configFilePath
      */
-    public EHSystem(EHNode ehnode, Simulation simulation, String configFilePath){
+    public EHSystem(EHNode ehNode, Simulation simulation, String configFilePath){
 
         //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.simulation = simulation;
-        this.ehNode = ehnode;
+        this.ehNode = ehNode;
 
         /** 
          * Load configuration
@@ -144,7 +144,7 @@ public class EHSystem { // EHSystem put all the pieces together
 
         // Initializing energy source
         if (config.getProperty("source.type").equalsIgnoreCase("photovoltaic")) {            
-            source = new PhotovoltaicCell(
+            source = new PhotovoltaicCell(ehNode.getNodeLabel(),
                     config.getProperty("source.name"), 
                     config.getProperty("source.outputpower.lookuptable"));
             PhotovoltaicCell pvSource = (PhotovoltaicCell) source;
@@ -152,13 +152,13 @@ public class EHSystem { // EHSystem put all the pieces together
         }
 
         // Initializing Harvester
-        harvester = new Harvester(
+        harvester = new Harvester(ehNode.getNodeLabel(), 
                 config.getProperty("harvester.name"),
                 config.getProperty("harvester.efficiency.lookuptable"));
 
         //Initializing energy storage
         if (config.getProperty("storage.type").equalsIgnoreCase("battery")) {
-            Battery battery = new Battery(this,
+            Battery battery = new Battery(ehNode.getNodeLabel(), 
                     config.getProperty("storage.name"), 
                     config.getProperty("storage.soc.lookuptable"),
                     Double.parseDouble(config.getProperty("battery.capacity")),
@@ -200,16 +200,16 @@ public class EHSystem { // EHSystem put all the pieces together
         double volts =              // Current cumulative voltage for all batteries
                 storage.getVoltage() * storage.getNumStorages();  
         double harvEfficiency =     // Efficiency of the harvester at given volts and output power
-                harvester.getEfficiency(sourceOutputPower, volts);              
-        
+                harvester.getEfficiency(sourceOutputPower, volts);
         double energy =             // The actual charge going into the battery in milli Joule 
                 source.getOutputEnergy(envData, chargeInterval) * harvEfficiency / 1000; 
 
         storage.charge(energy);         // Add the charge to the battery
         totalHarvestedEnergy += energy; // Accumulate count
         
-        logger.debug(String.format("node %d harvested %.2f luxs, to bat. %.4f mJ (%.2f V), eff. %.1f %%.", 
-                ehNode.getNodeLabel(), envData, energy, storage.getVoltage(), harvEfficiency*100));
+        if (ehNode.getNodeLabel() == 2)  // [iPAS] If be the overhearer 
+            logger.debug(String.format("node %d harvested %.1f luxs, to bat. %.2f mJ (%.1f V), eff. %.1f %%.", 
+                    ehNode.getNodeLabel(), envData, energy, storage.getVoltage(), harvEfficiency*100));
     }
 
     /** To be called by EHNode.dischargeConsumption() periodically 

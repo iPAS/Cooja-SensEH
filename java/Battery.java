@@ -36,7 +36,7 @@ public class Battery extends EnergyStorage {
     private double maxEnergy;   // mJ
     private double energy;      // mJ
     
-    private EHSystem ehs;
+    private int nodeLabel;
     
 
     /**
@@ -48,17 +48,16 @@ public class Battery extends EnergyStorage {
      * @param nominalVoltage
      * @param minVoltage
      */
-    public Battery(EHSystem ehs,
-            String storageName, String chargeVoltageLookupTableFile, 
+    public Battery(int nodeLabel, String storageName, String chargeVoltageLookupTableFile, 
             double capacity, double nominalVoltage, double minVoltage) {
     
         //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
-        this.ehs = ehs;
+        this.nodeLabel = nodeLabel;
         this.name = storageName;
         numBatteries    = 1;
-        chargeVoltageLUT = new LookupTable(storageName, chargeVoltageLookupTableFile);
+        chargeVoltageLUT = new LookupTable(nodeLabel, storageName, chargeVoltageLookupTableFile);
         
         CAPACITY        = capacity;  // mAh
         NOMINAL_VOLTAGE = nominalVoltage;
@@ -66,9 +65,8 @@ public class Battery extends EnergyStorage {
         maxEnergy       = CAPACITY * 3600 * NOMINAL_VOLTAGE;  // mA·h x 3600 x V --> mW·s (mJ)
         energy          = maxEnergy; 
         
-        int label = (ehs == null)? -1 : ehs.getEHNode().getNodeLabel();
         logger.debug(String.format("node %d with bat. %s initialized: cap. %f mAh, %.2f V of nominal %.2f V, %f mJ",
-                label, storageName, CAPACITY, getVoltage(energy), NOMINAL_VOLTAGE, energy));        
+                nodeLabel, storageName, CAPACITY, getVoltage(energy), NOMINAL_VOLTAGE, energy));        
     }
 
     public void setNumBatteries(int numBatteries){
@@ -147,10 +145,7 @@ public class Battery extends EnergyStorage {
     // --------------------------------------------------------------------------
     // Test: Checking the voltage drop for the node in transition/ Depletion =  88 J/day  without energy harvester
     public static void main(String[] args) {
-        Battery nimh = new Battery(null,
-                "Ni-Mh",
-                "/home/raza/raza@murphysvn/code/java/eclipseIndigo/Senseh/EnergyStorages/Ni-Mh.lut",
-                2500.0, 1.2, 1.0);
+        Battery nimh = new Battery(0, "Ni-Mh", "/home/raza/Senseh/EnergyStorages/Ni-Mh.lut", 2500.0, 1.2, 1.0);
         //System.out.println("Initial Charge: "+ nimh.getCharge() + " mAh");
         //System.out.println("Initial Voltage: "+ nimh.getVoltage());
         //nimh.setMaxEnergy(9000000);

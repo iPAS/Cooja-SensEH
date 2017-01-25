@@ -93,9 +93,9 @@ public class EHNode{
         this.configFilePath = configFilePath;
         this.senseh     = senseh;
 
-        ehSys           = new EHSystem(this, simulation, configFilePath);
+        ehSys           = new EHSystem(this, simulation, configFilePath);  // The energy harvesting model
         storageMotePin  = new Pin(ehSys.getStorage(), (SkyMote) mote);
-        consumption     = new PowerConsumption(simulation, mote, ehSys.getVoltage());        
+        consumption     = new PowerConsumption(simulation, mote, ehSys.getVoltage());  // The consumption model        
     }
 
     public void updateCharge() {  // [iPAS]: the EH system model of the node

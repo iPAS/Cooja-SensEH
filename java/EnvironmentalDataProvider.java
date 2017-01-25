@@ -36,15 +36,15 @@ public class EnvironmentalDataProvider {
      * @param delimiter
      * @param tokenNo
      */
-    public EnvironmentalDataProvider(String traceFile, String delimiter, int tokenNo){
+    public EnvironmentalDataProvider(String traceFile, String delimiter, int tokenNo) {
         
         if (!logger.isEnabledFor(LOG_LEVEL)) 
             logger.setLevel(LOG_LEVEL);
         
         this.traceFile = traceFile;
         this.delimiter = delimiter;
-        this.tokenNo= tokenNo;
-        totalRead=0;
+        this.tokenNo = tokenNo;
+        totalRead = 0;
         this.startReading();
     }
 

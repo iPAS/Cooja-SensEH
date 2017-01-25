@@ -25,8 +25,8 @@ public class PhotovoltaicCell extends EnergySource {
      * @param model
      * @param lookupTableFile
      */
-    public PhotovoltaicCell(String model, String lookupTableFile) {
-        lxPwrLUT = new LookupTable(model, lookupTableFile);
+    public PhotovoltaicCell(int nodeLabel, String model, String lookupTableFile) {
+        lxPwrLUT = new LookupTable(nodeLabel, model, lookupTableFile);
         numCells = 1;
     }
 
@@ -59,9 +59,8 @@ public class PhotovoltaicCell extends EnergySource {
     //--------------------------------------------------------------------------
     // Test function
     public static void main(String[] args) {
-        PhotovoltaicCell am1816 = new PhotovoltaicCell(
-                "Panasonic-AM1816",
-                "/home/raza/raza@murphysvn/code/java/eclipseIndigo/Senseh/EnergySources/Panasonic-AM1816.lut");
+        PhotovoltaicCell am1816 = new PhotovoltaicCell(0, 
+                "Panasonic-AM1816", "/home/raza/Senseh/EnergySources/Panasonic-AM1816.lut");
         for (double lux = 1.0; lux <= 1000; lux = lux + 1.0) {
             System.out.println(lux + " " + am1816.getOutputPower(lux));
         }

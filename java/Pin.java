@@ -24,6 +24,11 @@ public class Pin implements ADCInput {
     private ADC12 adc;
 
 
+    /**
+     * Constructor
+     * @param storage
+     * @param mote
+     */
     public Pin(EnergyStorage storage, SkyMote mote) {
         this.mote = mote;
         this.storage = storage;
@@ -36,9 +41,8 @@ public class Pin implements ADCInput {
         return analogtoDigital(storage.getVoltage());
     }
 
-    int analogtoDigital(double volts) {
-        // simple proof of concept. Actual should be ((volts-min)*2^12/(max-min))
-        return (int) (1000 * volts);
+    int analogtoDigital(double volts) {  // A simple proof of concept. 
+        return (int) (1000 * volts);  // Actual should be ( (volts-min) * 2^12 / (max-min) )
     }
 
 }

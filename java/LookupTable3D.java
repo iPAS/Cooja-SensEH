@@ -119,7 +119,7 @@ public class LookupTable3D {
     /**
      * Constructor
      */
-    public LookupTable3D(String name, String file) {
+    public LookupTable3D(int nodeLabel, String name, String file) {
 
         //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
@@ -228,8 +228,7 @@ public class LookupTable3D {
      * @param args
      */
     public static void main(String[] args) {
-        LookupTable3D harvesterLUT = new LookupTable3D("Multiharvester",
-                "/home/raza/raza@murphysvn/code/java/eclipseIndigo/Senseh/EnergyHarvesters/Multiharvester.lut");
+        LookupTable3D harvesterLUT = new LookupTable3D(0, "Multiharvester", "/home/raza/Senseh/EnergyHarvesters/Multiharvester.lut");
         System.out.println(harvesterLUT.getZ(75.00, 2.25));
         System.out.println(harvesterLUT.getZ(50.00, 2.2));
     }

@@ -109,7 +109,7 @@ public class LookupTable {
      * @param name
      * @param file
      */
-    public LookupTable(String name, String file) {
+    public LookupTable(int nodeLabel, String name, String file) {
         
         //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
