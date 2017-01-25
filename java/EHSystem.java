@@ -162,6 +162,7 @@ public class EHSystem { // EHSystem put all the pieces together
                     config.getProperty("storage.name"), 
                     config.getProperty("storage.soc.lookuptable"),
                     Double.parseDouble(config.getProperty("battery.capacity")),
+                    Double.parseDouble(config.getProperty("battery.initial")),
                     Double.parseDouble(config.getProperty("battery.nominalvoltage")),
                     Double.parseDouble(config.getProperty("battery.minoperatingvoltage")));
             battery.setNumBatteries(Integer.parseInt(config.getProperty("storage.num")));
