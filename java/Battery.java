@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
  */
 public class Battery extends EnergyStorage {
 
-    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static final Level LOG_LEVEL = Level.DEBUG;  // ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF
     private static Logger logger = Logger.getLogger(Battery.class);
     
     private String name;
@@ -65,7 +65,7 @@ public class Battery extends EnergyStorage {
         maxEnergy       = CAPACITY * 3600 * NOMINAL_VOLTAGE;  // mA·h x 3600 x V --> mW·s (mJ)
         energy          = maxEnergy; 
         
-        logger.debug(String.format("node %d with bat. %s initialized: cap. %f mAh, %.2f V of nominal %.2f V, %f mJ",
+        logger.info(String.format("node %d with bat. %s initialized: cap. %f mAh, %.2f V of nominal %.2f V, %f mJ",
                 nodeLabel, storageName, CAPACITY, getVoltage(energy), NOMINAL_VOLTAGE, energy));        
     }
 
@@ -145,7 +145,8 @@ public class Battery extends EnergyStorage {
     // --------------------------------------------------------------------------
     // Test: Checking the voltage drop for the node in transition/ Depletion =  88 J/day  without energy harvester
     public static void main(String[] args) {
-        Battery nimh = new Battery(0, "Ni-Mh", "/home/raza/Senseh/EnergyStorages/Ni-Mh.lut", 2500.0, 1.2, 1.0);
+        Battery nimh = new Battery(0, "Ni-Mh",
+                System.getProperty("user.dir") + "/../config/EnergyStorages/Ni-Mh.lut", 2500.0, 1.2, 1.0);
         //System.out.println("Initial Charge: "+ nimh.getCharge() + " mAh");
         //System.out.println("Initial Voltage: "+ nimh.getVoltage());
         //nimh.setMaxEnergy(9000000);
