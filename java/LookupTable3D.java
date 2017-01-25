@@ -127,97 +127,124 @@ public class LookupTable3D {
         this.name = name;
         this.file = file;
         
+        /**
+         * Open the LuT file
+         */
         BufferedReader bufReader = null;
         try {
-            bufReader = new BufferedReader(new FileReader(file));
-        
+            bufReader = new BufferedReader(new FileReader(file));        
         } catch (FileNotFoundException e) {
             logger.fatal(name + ": Lookup Table File 3D " + file + " not found! exiting...");
             e.printStackTrace();
             System.exit(-1);
         }
 
-        // Read the header line
+        /**
+         * Read the header line:
+         * > SolarCellOutput_mW  NiMHVoltage_V  HarvesterEfficiency
+         */
         String header = null;
         try {
-            header = bufReader.readLine();
-            
+            header = bufReader.readLine();            
         } catch (IOException e) {
             logger.fatal(name + ": Could not read Lookup Table File 3D" + file + "! exiting...");
             e.printStackTrace();
             System.exit(-1);
         }
-
-        if (header == null) {  // Empty lookup table file
+        if (header == null) {  // If it is an empty lookup table file
             logger.fatal(name + ": Lookup Table File 3D " + file + " is empty! exiting...");
             System.exit(-1);
         }
-        parseXYZCoordinates(header);
-
-        // Add the points
+        parseXYZCoordinates(header);  // xCoordinate = "SolarCellOutput_mW"
+                                      // yCoordinate = "NiMHVoltage_V"    
+                                      // zCoordinate = "HarvesterEfficiency"
+        /** 
+         * Read the y axis on next line:
+         * > X  2.00  2.1  2.2  2.3  2.4  2.5
+         */
         String yValuesLine = null;
         try {
             yValuesLine = bufReader.readLine();
-            
         } catch (IOException e) {
             logger.fatal(name + ": Could not read Lookup Table File 3D" + file + "! exiting...");
             e.printStackTrace();
             System.exit(-1);
-        }
+        }        
+        parseYValues(yValuesLine);  // yValues[] = { 2.00, 2.1, 2.2, 2.3, 2.4, 2.5 }
         
-        parseYValues(yValuesLine);
+        /**
+         * Read the x axis on remain lines, and make the z axis:
+         * > 5   0.775   0.775   0.775   0.776   0.778   0.779 
+         * > 50  0.775   0.775   0.776   0.775   0.778   0.78 
+         * > 100 0.777   0.777   0.778   0.782   0.784   0.785
+         * > ...
+         */
         String dataValues = null;
         xValuesArray = new ArrayList<Double>();
         zValuesArray = new ArrayList<double[]>();
         try {
-            while ((dataValues = bufReader.readLine()) != null)
-                parseXValue(dataValues);
-            
+            while ((dataValues = bufReader.readLine()) != null)  // Continuously read line-by-line
+                parseXValue(dataValues);    // 5   0.775   0.775   0.775   0.776   0.778   0.779
+                                            // xValuesArray[]   = { 5, 50, 100, ... }
+                                            // zValuesArray[][] = 0.775, ... 
         } catch (IOException e) {
             logger.fatal("Check the LUT format! exiting ...");
             e.printStackTrace();
             System.exit(-1);
-        }
+        } 
 
-        // FIXME: Not the ideal way of doing things !!!! But for now :)
-        Object [] xValuesDouble = xValuesArray.toArray();
-        xValues = new double[xValuesDouble.length];
-        for (int i = 0; i < xValuesDouble.length; i++) {
-            xValues[i] = ((Double) (xValuesDouble[i])).doubleValue();
+        /**
+         * Now yValues[], xValuesArray, zValuesArray are ready.
+         * Next, create xValues[] and zValues[] from xValuesArray and zValuesArray respectively. 
+         * XXX: Not the ideal way of doing things !!!! But for now :)
+         */
+        // xValuesArray --> xValues
+        Object[] xValuesObj = xValuesArray.toArray();
+        xValues = new double[xValuesObj.length];
+        for (int i = 0; i < xValuesObj.length; i++) {
+            xValues[i] = ((Double) (xValuesObj[i])).doubleValue();
         }
-
-        Object [] zValuesObjArray = zValuesArray.toArray();
+        // zValuesArray --> zValues
+        Object[] zValuesObj = zValuesArray.toArray();
         zValues = new double[xValues.length][yValues.length];
         for (int x = 0; x < xValues.length; x++) {
-            double [] dValues = (double[]) zValuesObjArray[x];
+            double[] dValues = (double[]) zValuesObj[x];
             for (int y = 0; y < yValues.length; y++) {
                 zValues[x][y] = dValues[y];
             }
         }
+        
+        /*
+         * Finally, xValues[], yValues[], and zValues[][] are ready.
+         */
     }
 
     private void parseXYZCoordinates(String header) {
+        // SolarCellOutput_mW  NiMHVoltage_V  HarvesterEfficiency
         String [] xyCoordinates = header.split("\t");
-        xCoordinate = xyCoordinates[0];
-        yCoordinate = xyCoordinates[1];
-        zCoordinate = xyCoordinates[2];
+        xCoordinate = xyCoordinates[0];  // SolarCellOutput_mW
+        yCoordinate = xyCoordinates[1];  // NiMHVoltage_V
+        zCoordinate = xyCoordinates[2];  // HarvesterEfficiency
     }
 
     private void parseYValues(String yValueLine) {
+        // X  2.00  2.1  2.2  2.3  2.4  2.5
         String [] yV = yValueLine.split("\t");
         yValues = new double[yV.length - 1];
         for (int i = 0; i < yV.length - 1; i++) {
-            yValues[i] = Double.parseDouble( yV[i + 1] );
-        }
+            yValues[i] = Double.parseDouble( yV[i + 1] );  // yValues[] = { 2.00, 2.1, 2.2, 2.3, 2.4, 2.5 }
+        }  
     }
 
-    private void parseXValue(String dataValues) {
-        // Pick up the value of y from the first column
-        String [] dV = dataValues.split("\t");
-        xValuesArray.add(new Double( Double.parseDouble(dV[0]) ));
-        double [] rowDataValues = new double[yValues.length];
-        for (int y = 0; y < yValues.length; y++) {
-            rowDataValues[y] = Double.parseDouble( dV[y + 1] );
+    private void parseXValue(String dataValuesLine) {
+        // 5   0.775   0.775   0.775   0.776   0.778   0.779
+        // xValuesArray[]   = { 5, 50, 100, ... }
+        // zValuesArray[][] = 0.775, ...
+        String [] dV = dataValuesLine.split("\t");
+        xValuesArray.add(new Double( Double.parseDouble( dV[0] ) ));  // Get x from the first column, e.g., 5        
+        double [] rowDataValues = new double[yValues.length];    
+        for (int y = 0; y < yValues.length; y++) {               // Remain data for z[][], e.g.,
+            rowDataValues[y] = Double.parseDouble( dV[y + 1] );  //  0.775  0.775  0.775  ...
         }
         zValuesArray.add(rowDataValues);
     }
