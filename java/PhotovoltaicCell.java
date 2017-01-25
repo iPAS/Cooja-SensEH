@@ -51,7 +51,7 @@ public class PhotovoltaicCell extends EnergySource {
      * Returns energy in micro joule
      */
     @Override
-    public double getOutputEnergy(double lux, double timeInterval) {
+    public double getOutputEnergy(double lux, double timeInterval /* in second */) {
         return getOutputPower(lux) * timeInterval;
     }
 
@@ -59,10 +59,11 @@ public class PhotovoltaicCell extends EnergySource {
     //--------------------------------------------------------------------------
     // Test function
     public static void main(String[] args) {
-        PhotovoltaicCell am1816 = new PhotovoltaicCell(0, 
-                "Panasonic-AM1816", "/home/raza/Senseh/EnergySources/Panasonic-AM1816.lut");
-        for (double lux = 1.0; lux <= 1000; lux = lux + 1.0) {
-            System.out.println(lux + " " + am1816.getOutputPower(lux));
+        PhotovoltaicCell am1816 = new PhotovoltaicCell(0, "Panasonic-AM1816",
+                System.getProperty("user.dir") + "/../config/EnergySources/Panasonic-AM1816.lut");
+        for (double lux = 0.0; lux <= 1500; lux = lux + 10.0) {  // >1000 meant to be in extrapolation area
+            System.out.println(String.format("Input %.1f lux -> %.2f uW -> %.2f uJ", 
+                    lux, am1816.getOutputPower(lux), am1816.getOutputEnergy(lux, 1)));
         }
     }
 

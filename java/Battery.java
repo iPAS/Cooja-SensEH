@@ -92,8 +92,8 @@ public class Battery extends EnergyStorage {
     }
 
     double getVoltage(double energy_mj) {
-        double chrg = getCharge(energy_mj);
-        return chargeVoltageLUT.getY(chrg);
+        double charge = getCharge(energy_mj);
+        return chargeVoltageLUT.getY(charge);
     }
 
     @Override

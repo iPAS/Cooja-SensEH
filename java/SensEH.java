@@ -37,7 +37,7 @@ import java.util.Collection;
 @PluginType(PluginType.SIM_PLUGIN)
 public class SensEH extends VisPlugin {
     
-    private static final Level LOG_LEVEL = Level.OFF;
+    private static final Level LOG_LEVEL = Level.OFF;  // ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF
     private static Logger logger = Logger.getLogger(SensEH.class);
 
     private Simulation simulation;
@@ -138,7 +138,7 @@ public class SensEH extends VisPlugin {
 
         @Override
         public void run() {
-            logger.info("ChargeUpdateTaskScheduler.run() @" + simulation.getSimulationTime());
+            logger.debug("ChargeUpdateTaskScheduler.run() @" + simulation.getSimulationTime());
             
             totalUpdates = 1;
             startTime = simulation.getSimulationTime();
@@ -158,7 +158,7 @@ public class SensEH extends VisPlugin {
 
         @Override
         public void execute(long t) {
-            logger.info("ChargeUpdateEvent.execute() @" + simulation.getSimulationTime());
+            logger.debug("ChargeUpdateEvent.execute() @" + simulation.getSimulationTime());
             
             if (simulation.getSimulationTime() < t) {  // Detect early events: reschedule for later
                 simulation.scheduleEvent(this, startTime + (long)(totalUpdates * getChargeInterval() * 1000000));

@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class LookupTable3D {
 
-    private static final Level LOG_LEVEL = Level.OFF;
+    private static final Level LOG_LEVEL = Level.OFF;  // ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF
     private static Logger logger = Logger.getLogger(LookupTable3D.class);
 
     private String name;    
@@ -228,7 +228,8 @@ public class LookupTable3D {
      * @param args
      */
     public static void main(String[] args) {
-        LookupTable3D harvesterLUT = new LookupTable3D(0, "Multiharvester", "/home/raza/Senseh/EnergyHarvesters/Multiharvester.lut");
+        LookupTable3D harvesterLUT = new LookupTable3D(0, "Multiharvester", 
+                System.getProperty("user.dir") + "/../config/EnergyHarvesters/Multiharvester.lut");
         System.out.println(harvesterLUT.getZ(75.00, 2.25));
         System.out.println(harvesterLUT.getZ(50.00, 2.2));
     }

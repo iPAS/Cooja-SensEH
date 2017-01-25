@@ -32,7 +32,7 @@ import java.io.StringReader;
  */
 public class EHSystem { // EHSystem put all the pieces together
 
-    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static final Level LOG_LEVEL = Level.INFO;  // ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF
     private static Logger logger = Logger.getLogger(EHSystem.class);
     
     private double totalHarvestedEnergy = 0;
@@ -41,7 +41,7 @@ public class EHSystem { // EHSystem put all the pieces together
     private Harvester harvester     = null;
     private EnergyStorage storage   = null;
     private EnvironmentalDataProvider envDataProvider = null;
-    private double chargeInterval;
+    private double chargeInterval;  // in second
     
     private Simulation simulation;
     private EHNode ehNode;
@@ -208,8 +208,8 @@ public class EHSystem { // EHSystem put all the pieces together
         totalHarvestedEnergy += energy; // Accumulate count
         
         if (ehNode.getNodeLabel() == 2)  // [iPAS] If be the overhearer 
-            logger.debug(String.format("node %d harvested %.1f luxs, to bat. %.2f mJ (%.1f V), eff. %.1f %%.", 
-                    ehNode.getNodeLabel(), envData, energy, storage.getVoltage(), harvEfficiency*100));
+        logger.debug(String.format("node %d harvested %.1f luxs, to bat. %.2f mJ (%.1f V), eff. %.1f %%.", 
+                ehNode.getNodeLabel(), envData, energy, storage.getVoltage(), harvEfficiency*100));
     }
 
     /** To be called by EHNode.dischargeConsumption() periodically 

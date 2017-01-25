@@ -21,14 +21,16 @@ import org.apache.log4j.Logger;
 
 public class LookupTable {
     
-    private static final Level LOG_LEVEL = Level.OFF;
+    private static final Level LOG_LEVEL = Level.OFF;  // ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF
     private static Logger logger = Logger.getLogger(LookupTable.class);
 
     private String name;    
     private String file;  // A TAB separated two column flat file (Format:x\ty)
     private String xCoordinate;
     private String yCoordinate;
-    private Point [] points;
+    private Point[] points;
+    
+    private int nodeLabel;
 
     
     /**
@@ -56,12 +58,16 @@ public class LookupTable {
      * @return
      */
     public double getY(double x) {
-        double y;
-        Point [] piecePoints = getPieceWiseLinePoints(x);        
+        Point[] piecePoints = getPieceWiseLinePoints(x);        
         double slope = 
                 (piecePoints[1].getY() - piecePoints[0].getY()) / 
                 (piecePoints[1].getX() - piecePoints[0].getX());
-        y = slope * (x - piecePoints[0].getX()) + piecePoints[0].getY();  // Calculating the linear interpolation
+        double y = slope * (x - piecePoints[0].getX()) + piecePoints[0].getY();  // Calculating the linear interpolation
+        
+        if (nodeLabel == 2)  // [iPAS] If be the overhearer
+        logger.debug(String.format("node %d: (%f,%f) in (%f,%f) (%f,%f)", nodeLabel, x, y, 
+                piecePoints[0].getX(), piecePoints[0].getY(), piecePoints[1].getX(), piecePoints[1].getY()));
+        
         return y;
     }
     
@@ -72,7 +78,7 @@ public class LookupTable {
      * @return
      */
     private Point[] getPieceWiseLinePoints(double x) {
-        Point [] piecePoints = new Point[2]; 
+        Point[] piecePoints = new Point[2]; 
         
         // Does the value of x fall within the range of x values of points ?
         int i = 0;
@@ -82,11 +88,14 @@ public class LookupTable {
         }
         
         double slope, y;
-        if (i == 0) {  // In case, x is less than all other points.            
-            slope = (points[1].getY() - points[0].getY()) / (points[1].getX() - points[0].getX());  
-            y     = points[0].getY() - slope * (points[0].getX() - x);
-            piecePoints[0] = new Point(x, y);  
-            piecePoints[1] = points[0];            
+        if (i == 0) {  // In case, x is less than all other points.
+            slope = (points[1].getY() - points[0].getY()) / (points[1].getX() - points[0].getX()); 
+            // If x has been already specified by the first point,
+            //  we cannot let 'slope = 0 / 0' be happened.
+            // Thus, we make a pseudo point to prevent two piecePoints are the same.
+            y = points[0].getY() - slope * (points[0].getX() - (x-1));
+            piecePoints[0] = new Point((x-1), y);  
+            piecePoints[1] = points[0];
         } else
         
         if (i == points.length) {  // In case, x is greater than the others.
@@ -114,6 +123,7 @@ public class LookupTable {
         //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
+        this.nodeLabel = nodeLabel;
         this.name = name;
         this.file = file;
         
@@ -178,5 +188,10 @@ public class LookupTable {
     public static void main(String[] args) {
         // Testing the stand alone program
         // LookupTable Harvester new LookupTable(String name, String file);
+        LookupTable lut = new LookupTable(0, "", 
+                System.getProperty("user.dir") + "/../config/EnergySources/Panasonic-AM1816.lut");
+        for (double x = 0.0; x <= 1500; x = x + 10.0) {  // >1000 meant to be used with extrapolation technique
+            System.out.println(String.format("x: %.2f -> y: %.2f", x, lut.getY(x)));
+        }
     }
 }

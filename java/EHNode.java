@@ -25,7 +25,7 @@ import se.sics.mspsim.core.MSP430;
 @ClassDescription("A node with Energy Harvesting")
 public class EHNode{
 
-    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static final Level LOG_LEVEL = Level.DEBUG;  // ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF
     private static Logger logger = Logger.getLogger(EHNode.class);
 
     private Simulation simulation;
