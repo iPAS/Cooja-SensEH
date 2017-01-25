@@ -41,7 +41,7 @@ public class EHSystem { // EHSystem put all the pieces together
     private Harvester harvester     = null;
     private EnergyStorage storage   = null;
     private EnvironmentalDataProvider envDataProvider = null;
-    private double chargeInterval;  // in second
+    private double chargeInterval_s;  // in second
     
     private Simulation simulation;
     private EHNode ehNode;
@@ -55,7 +55,7 @@ public class EHSystem { // EHSystem put all the pieces together
     }
 
     public double getChargeInterval() {
-        return chargeInterval;
+        return chargeInterval_s;
     }
 
     public EnergyStorage getStorage() {
@@ -139,7 +139,7 @@ public class EHSystem { // EHSystem put all the pieces together
                 config.getProperty("source.environment.tracefile.path") + "/" + ehNode.getNodeLabel() + ".txt",
                 config.getProperty("source.environment.tracefile.format.delimiter"),
                 Integer.parseInt(config.getProperty("source.environment.tracefile.format.columnno")));
-        chargeInterval = Double.parseDouble(  // in seconds, defines how frequently charge should be updated
+        chargeInterval_s = Double.parseDouble(  // in seconds, defines how frequently charge should be updated
                 config.getProperty("source.environment.sampleinterval"));
 
         // Initializing energy source
@@ -188,7 +188,7 @@ public class EHSystem { // EHSystem put all the pieces together
          */
         
         // Read the next value from environmental trace file. 
-        double envData = envDataProvider.getNext();  // Average luxs.  
+        double envData_lux = envDataProvider.getNext();  // Average luxs.  
         
         // Calculate the output power for the source for given environmental conditions
         /**
@@ -196,21 +196,21 @@ public class EHSystem { // EHSystem put all the pieces together
          * If envValue is too large, we should get maximum output power that can be taken from the source.
          * It should not be arbitrary large.
          */
-        double sourceOutputPower =  // Source power in microWatts / 1000 = milliWatts
-                source.getOutputPower(envData) / 1000;  
+        double sourceOutputPower_mW =  // Source power in microWatts / 1000 = milliWatts
+                source.getOutputPower(envData_lux) / 1000;  
         double volts =              // Current cumulative voltage for all batteries
                 storage.getVoltage() * storage.getNumStorages();  
         double harvEfficiency =     // Efficiency of the harvester at given volts and output power
-                harvester.getEfficiency(sourceOutputPower, volts);
-        double energy =             // The actual charge going into the battery in milli Joule 
-                source.getOutputEnergy(envData, chargeInterval) * harvEfficiency / 1000; 
+                harvester.getEfficiency(sourceOutputPower_mW, volts);
+        double energy_mJ =             // The actual charge going into the battery in milli Joule 
+                source.getOutputEnergy(envData_lux, chargeInterval_s) * harvEfficiency / 1000; 
 
-        storage.charge(energy);         // Add the charge to the battery
-        totalHarvestedEnergy += energy; // Accumulate count
+        storage.charge(energy_mJ);         // Add the charge to the battery
+        totalHarvestedEnergy += energy_mJ; // Accumulate count
         
         if (ehNode.getNodeLabel() == 2)  // [iPAS] If be the overhearer 
         logger.debug(String.format("node %d harvested %.1f luxs, to bat. %.2f mJ (%.1f V), eff. %.1f %%.", 
-                ehNode.getNodeLabel(), envData, energy, storage.getVoltage(), harvEfficiency*100));
+                ehNode.getNodeLabel(), envData_lux, energy_mJ, storage.getVoltage(), harvEfficiency*100));
     }
 
     /** To be called by EHNode.dischargeConsumption() periodically 
