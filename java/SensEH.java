@@ -37,7 +37,7 @@ import java.util.Collection;
 @PluginType(PluginType.SIM_PLUGIN)
 public class SensEH extends VisPlugin {
     
-    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static final Level LOG_LEVEL = Level.OFF;
     private static Logger logger = Logger.getLogger(SensEH.class);
 
     private Simulation simulation;
@@ -68,18 +68,16 @@ public class SensEH extends VisPlugin {
     public SensEH(Simulation simulation, final Cooja gui) {
         super("SensEH Plugin", gui, false);
         
-        if (!logger.isEnabledFor(LOG_LEVEL)) 
+        //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.simulation = simulation;
         
         messageShowUI.addPopupMenuItem(null, true);  // Create message list popup
         add(new JScrollPane(messageShowUI));
-
-        setSize(500, 200);
-        
-        logger.info("SensEH plugin created!");
         showMessage("SensEH plugin created!");
+        
+        setSize(500, 200);
     }
 
     @Override
@@ -140,7 +138,7 @@ public class SensEH extends VisPlugin {
 
         @Override
         public void run() {
-            logger.debug("ChargeUpdateTaskScheduler.run() @" + simulation.getSimulationTime());
+            logger.info("ChargeUpdateTaskScheduler.run() @" + simulation.getSimulationTime());
             
             totalUpdates = 1;
             startTime = simulation.getSimulationTime();
@@ -160,7 +158,7 @@ public class SensEH extends VisPlugin {
 
         @Override
         public void execute(long t) {
-            logger.debug("ChargeUpdateEvent.execute() @" + simulation.getSimulationTime());
+            logger.info("ChargeUpdateEvent.execute() @" + simulation.getSimulationTime());
             
             if (simulation.getSimulationTime() < t) {  // Detect early events: reschedule for later
                 simulation.scheduleEvent(this, startTime + (long)(totalUpdates * getChargeInterval() * 1000000));

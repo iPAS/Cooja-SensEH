@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class LookupTable3D {
 
-    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static final Level LOG_LEVEL = Level.OFF;
     private static Logger logger = Logger.getLogger(LookupTable3D.class);
 
     private String name;    
@@ -85,29 +85,33 @@ public class LookupTable3D {
      * @return
      */
     private int[] getPieceWiseLinePoints(double[] array, double value) {
-        int[] arrayIndices = new int[2];
-        int i = 0;
+        int [] arrayIndices = new int[2];
+        
         boolean isInRange = false;
-        while (i < array.length) {
+        int i = 0;
+        for (; i < array.length; i++) {
             if (value <= array[i]) {
                 isInRange = true;
                 break;
             }
-            i++;
         }
+        
         if (isInRange) {
-            if (i == 0) {
+            if (i == 0) {  // 'value' is less than all others. 
                 arrayIndices[0] = arrayIndices[1] = 0;
-            } else {
+                
+            } else {  // In range.
                 arrayIndices[0] = i - 1;
                 arrayIndices[1] = i;
             }
+            
             return arrayIndices;
         }
-        // value is not in range and i == array.length
+        
+        // FIXME: value is NOT in range and i == array.length
         arrayIndices[0] = arrayIndices[1] = array.length - 1;
-        // System.err.println ("LookupTable3D: Value Out of Range");
-        // System.exit(-1);
+        logger.warn("LookupTable3D: Value Out of Range!");
+//        System.exit(-1);
 
         return arrayIndices;
     }
@@ -117,7 +121,7 @@ public class LookupTable3D {
      */
     public LookupTable3D(String name, String file) {
 
-        if (!logger.isEnabledFor(LOG_LEVEL)) 
+        //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.name = name;

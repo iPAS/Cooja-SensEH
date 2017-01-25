@@ -86,7 +86,7 @@ public class EHSystem { // EHSystem put all the pieces together
      */
     public EHSystem(EHNode ehnode, Simulation simulation, String configFilePath){
 
-        if (!logger.isEnabledFor(LOG_LEVEL)) 
+        //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.simulation = simulation;
@@ -208,7 +208,7 @@ public class EHSystem { // EHSystem put all the pieces together
         storage.charge(energy);         // Add the charge to the battery
         totalHarvestedEnergy += energy; // Accumulate count
         
-        logger.debug(String.format("node %d harvests %.2f luxs, to bat. %.4f mJ (%.2f V), eff. %.1f %%.", 
+        logger.debug(String.format("node %d harvested %.2f luxs, to bat. %.4f mJ (%.2f V), eff. %.1f %%.", 
                 ehNode.getNodeLabel(), envData, energy, storage.getVoltage(), harvEfficiency*100));
     }
 

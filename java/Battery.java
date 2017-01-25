@@ -52,7 +52,7 @@ public class Battery extends EnergyStorage {
             String storageName, String chargeVoltageLookupTableFile, 
             double capacity, double nominalVoltage, double minVoltage) {
     
-        if (!logger.isEnabledFor(LOG_LEVEL)) 
+        //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.ehs = ehs;

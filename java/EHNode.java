@@ -83,7 +83,7 @@ public class EHNode{
      */
     public EHNode(SensEH senseh, int nodeID, Simulation simulation, String configFilePath) {
 
-        if (!logger.isEnabledFor(LOG_LEVEL)) 
+        //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.nodeID     = nodeID;

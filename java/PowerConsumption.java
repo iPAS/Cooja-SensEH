@@ -49,9 +49,9 @@ public class PowerConsumption implements OperatingModeListener, Observer, MSP430
     private int lastCPUMode;
 
     // cpu statistics
-    long[] cpuModeTimes;
-    long[] cpuModeTimesTotal;
-    long[] cpuModeTimesTotalSnapshot;
+    long [] cpuModeTimes;
+    long [] cpuModeTimesTotal;
+    long [] cpuModeTimesTotalSnapshot;
     private long lastCPUUpdateTime;
 
     protected void accumulateCPUModeTime(int mode, long t) {
@@ -157,7 +157,7 @@ public class PowerConsumption implements OperatingModeListener, Observer, MSP430
     private RadioTimes radioTimes;
     public RadioTimes radioTimesTotal;
     public RadioTimes radioTimesTotalSnapshot;
-    private int lastRadioTxIndicator; // iPAS: states in multiple transmission powers
+    private int lastRadioTxIndicator;  // States in multiple transmission powers
 
     // --------------------------------------------------------------------------
     // All modes of CPU, even Radio, are reported in mA, then powers are all in mW
@@ -213,7 +213,7 @@ public class PowerConsumption implements OperatingModeListener, Observer, MSP430
     // --------------------------------------------------------------------------
     public PowerConsumption(final Simulation simulation, final Mote mote, double supplyVoltage) {
         
-        if (!logger.isEnabledFor(LOG_LEVEL)) 
+        //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.simulation = simulation;

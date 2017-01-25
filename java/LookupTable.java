@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
 
 public class LookupTable {
     
-    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static final Level LOG_LEVEL = Level.OFF;
     private static Logger logger = Logger.getLogger(LookupTable.class);
 
     private String name;    
@@ -111,7 +111,7 @@ public class LookupTable {
      */
     public LookupTable(String name, String file) {
         
-        if (!logger.isEnabledFor(LOG_LEVEL)) 
+        //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
         
         this.name = name;
