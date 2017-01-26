@@ -27,92 +27,70 @@ public class LookupTable3D {
     private String xCoordinate;
     private String yCoordinate;
     private String zCoordinate;
-    private double []   xValues;
-    private double []   yValues;
-    private double [][] zValues;
+    private double[]   xValues;
+    private double[]   yValues;
+    private double[][] zValues;
 
     private ArrayList<Double> xValuesArray;
     private ArrayList<double[]> zValuesArray;
 
     
     /**
-     * Calculating the bilinear interpolation As described in
-     * @see http://en.wikipedia.org/wiki/Bilinear_interpolation
+     * Calculating the bilinear interpolation as described in     
+     * @see http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
      * @param x
      * @param y
      * @return
      */
     public double getZ(double x, double y) {        
-        int [] xi = getPieceWiseLinePoints(xValues, x);        
-        int [] yi = getPieceWiseLinePoints(yValues, y);
-        
-        double x0 = xValues[xi[0]];
-        double y0 = yValues[yi[0]];
+        int[] xi = getPieceWiseLinePoints(xValues, x);  // Array of two indices to the couple points which x is between.
+        int[] yi = getPieceWiseLinePoints(yValues, y);  // Array of two indices to the couple points which y is between.        
+        double x0 = xValues[xi[0]];  // Area bounded by x0,x1,y0,y1 axes contains the point (x,y) 
         double x1 = xValues[xi[1]];
+        double y0 = yValues[yi[0]];
         double y1 = yValues[yi[1]];
-
-        double z00 = zValues[xi[0]][yi[0]];
+        double z00 = zValues[xi[0]][yi[0]];  // z of all four points
         double z10 = zValues[xi[1]][yi[0]];
         double z01 = zValues[xi[0]][yi[1]];
-        double z11 = zValues[xi[1]][yi[1]];
-
-        // First try double 
-        // z = ( z00 * (x1-x) * (y1-y) + z10 * (x-x0) * (y1-y) * + z01 * (x1-x) * (y-y0) + z11 * (x-x0) * (y-y0) ) 
-        //         / ( (x1-x0) * (y1-y0) ); 
-        // But, the problem, zero in denominator --> NaN
-         
-        double r1 = z00;
-        double r2 = z01;
-        // Calculating value at x
+        double z11 = zValues[xi[1]][yi[1]];        
+        // The explanation is in http://supercomputingblog.com/graphics/coding-bilinear-interpolation/.
+        double r0 = (x0 == 0)? z00 : z10;  // Weighted average x0 .. x .. x1, z00 .. r0 .. z10 
+        double r1 = (x0 == 0)? z01 : z11;  // Weighted average x0 .. x .. x1, z01 .. r1 .. z11
         if (x0 != x1) {
-            // Calculated r1 and r2
-            r1 = ((x1 - x) * z00 + (x - x0) * z10) / (x1 - x0);
-            r2 = ((x1 - x) * z01 + (x - x0) * z11) / (x1 - x0);
+            r0 = ((x1 - x) * z00 + (x - x0) * z10) / (x1 - x0);
+            r1 = ((x1 - x) * z01 + (x - x0) * z11) / (x1 - x0);
         }
-
-        double z = r1;
+        double z = (y0 == 0)? r0 : r1;  // Weighted average y0 .. y .. y1, r0 .. z .. r1
         if (y0 != y1) {
-            z = ((y1 - y) * r1 + (y - y0) * r2) / (y1 - y0);
+            z = ((y1 - y) * r0 + (y - y0) * r1) / (y1 - y0);
         }
-
         return z;
     }
     
     /**    
-     * Find the two consecutive indeces
+     * Find the two consecutive indices to an input array.
      * @param array
      * @param value
      * @return
      */
     private int[] getPieceWiseLinePoints(double[] array, double value) {
-        int [] arrayIndices = new int[2];
-        
-        boolean isInRange = false;
+        int[] arrayIndices = new int[2];        
+        // Does the 'value' fall within 'array' ?
         int i = 0;
         for (; i < array.length; i++) {
-            if (value <= array[i]) {
-                isInRange = true;
+            if (value <= array[i])
                 break;
-            }
+        }        
+        arrayIndices[0] = i - 1;
+        arrayIndices[1] = i;
+        if (i == 0) {  // In case, 'value' is less than all others in the 'array'.
+            arrayIndices[0] = i;       
+            logger.warn("value out of range!");            
+        } else
+        if (i == array.length) {  // In case, 'value' is greater than the others.
+            arrayIndices[1] = i - 1;
+            logger.warn("value out of range!");
         }
-        
-        if (isInRange) {
-            if (i == 0) {  // 'value' is less than all others. 
-                arrayIndices[0] = arrayIndices[1] = 0;
-                
-            } else {  // In range.
-                arrayIndices[0] = i - 1;
-                arrayIndices[1] = i;
-            }
-            
-            return arrayIndices;
-        }
-        
-        // FIXME: value is NOT in range and i == array.length
-        arrayIndices[0] = arrayIndices[1] = array.length - 1;
-        logger.warn("LookupTable3D: Value Out of Range!");
-//        System.exit(-1);
-
         return arrayIndices;
     }
     
@@ -257,8 +235,14 @@ public class LookupTable3D {
     public static void main(String[] args) {
         LookupTable3D harvesterLUT = new LookupTable3D(0, "Multiharvester", 
                 System.getProperty("user.dir") + "/../config/EnergyHarvesters/Multiharvester.lut");
-        System.out.println(harvesterLUT.getZ(75.00, 2.25));
-        System.out.println(harvesterLUT.getZ(50.00, 2.2));
+
+        for (double voltage = 1.80; voltage <= 2.8; voltage += 0.05)
+            for (double inputPower = 0.0; inputPower <= 350.0; inputPower += 25.0) 
+                System.out.println(String.format("Efficiency(%.2f mW, %.2f V)\t%.4f", 
+                        inputPower, voltage, harvesterLUT.getZ(inputPower, voltage)));
+            
+//        System.out.println(harvesterLUT.getZ(75.00, 2.25));
+//        System.out.println(harvesterLUT.getZ(50.00, 2.2));
     }
 
 }

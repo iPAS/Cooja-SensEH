@@ -96,6 +96,7 @@ public class LookupTable {
             y = points[0].getY() - slope * (points[0].getX() - (x-1));
             piecePoints[0] = new Point((x-1), y);  
             piecePoints[1] = points[0];
+            logger.warn("value out of range!");
         } else
         
         if (i == points.length) {  // In case, x is greater than the others.
@@ -103,7 +104,7 @@ public class LookupTable {
             y     = points[i-1].getY() + slope * (x - points[i-1].getX());
             piecePoints[0] = points[i-1];  
             piecePoints[1] = new Point(x, y);
-            
+            logger.warn("value out of range!");            
         } else {  // In the ranges
             piecePoints[0] = points[i-1];
             piecePoints[1] = points[i];
