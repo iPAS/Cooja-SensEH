@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
  */
 public class Battery extends EnergyStorage {
 
-    private static final Level LOG_LEVEL = Level.DEBUG;
+    private static final Level LOG_LEVEL = Level.DEBUG;  // ALL > TRACE > DEBUG > INFO > WARN > ERROR > FATAL > OFF
     private static Logger logger = Logger.getLogger(Battery.class);
     
     private String name;
@@ -49,7 +49,9 @@ public class Battery extends EnergyStorage {
      * @param minVoltage
      */
     public Battery(int nodeLabel, String storageName, String chargeVoltageLookupTableFile, 
-            double capacity, double nominalVoltage, double minVoltage) {
+            double capacity,  // in mAh 
+            double initEnergyPercent,  // 0-100 percent of maximum energy    
+            double nominalVoltage, double minVoltage) {
     
         //if (!logger.isEnabledFor(LOG_LEVEL))  // Log4J configuration file is in cooja/config/log4j_config.xml 
             logger.setLevel(LOG_LEVEL);
@@ -63,9 +65,9 @@ public class Battery extends EnergyStorage {
         NOMINAL_VOLTAGE = nominalVoltage;
         MIN_OPERATING_VOLTAGE   = minVoltage;        
         maxEnergy       = CAPACITY * 3600 * NOMINAL_VOLTAGE;  // mA·h x 3600 x V --> mW·s (mJ)
-        energy          = maxEnergy; 
+        energy          = maxEnergy * initEnergyPercent / 100; 
         
-        logger.debug(String.format("node %d with bat. %s initialized: cap. %f mAh, %.2f V of nominal %.2f V, %f mJ",
+        logger.info(String.format("node %d with bat. %s initialized: cap. %f mAh, %.2f V of nominal %.2f V, %f mJ",
                 nodeLabel, storageName, CAPACITY, getVoltage(energy), NOMINAL_VOLTAGE, energy));        
     }
 
@@ -145,15 +147,23 @@ public class Battery extends EnergyStorage {
     // --------------------------------------------------------------------------
     // Test: Checking the voltage drop for the node in transition/ Depletion =  88 J/day  without energy harvester
     public static void main(String[] args) {
-        Battery nimh = new Battery(0, "Ni-Mh", "/home/raza/Senseh/EnergyStorages/Ni-Mh.lut", 2500.0, 1.2, 1.0);
-        //System.out.println("Initial Charge: "+ nimh.getCharge() + " mAh");
-        //System.out.println("Initial Voltage: "+ nimh.getVoltage());
+        Battery nimh = new Battery(0, "Ni-Mh",
+                System.getProperty("user.dir") + "/../config/EnergyStorages/Ni-Mh.lut", 
+                2500.0,  // mAh for capacity   
+                80,     // % for initial energy 
+                1.2,    // V for nominal voltage
+                1.0);   // V for minimum operation-able voltage
+        System.out.println("Initial Charge: "+ nimh.getCharge() + " mAh");
+        System.out.println("Initial Voltage: "+ nimh.getVoltage() + " V");
+        System.out.println("Aim to be depleted in 7 weeks..");
         //nimh.setMaxEnergy(9000000);
         nimh.setNumBatteries(2);
-        for (int week = 1; week <= 100; week++) {
-            nimh.discharge(88 * 1000 * 7);
-            System.out.println(String.format("%f\t%f\t%f\t%b", 
-                    nimh.getCharge(), nimh.getVoltage(), nimh.residualBatteryPercentage(), nimh.isDepleted()));
+        for (int week = 1; week <= 14; week++) {
+            double loss = (2500.*80./100.) * 1.2 * 3600 *2/* 2 cells */ /7/* to be depleted in 7 weeks */ ;            
+            nimh.discharge(loss);
+            
+            System.out.println(String.format("%2d\tdisc:%.2f mJ\trem:%.2f mAh\t%.2fV\t%.2f%%\t%b", week,
+                    loss, nimh.getCharge(), nimh.getVoltage(), nimh.residualBatteryPercentage(), nimh.isDepleted()));
         }
     }
 
